@@ -2,6 +2,8 @@ import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import './index.css'
+import { CartProvider } from './context/CartContext'
+import { AuthProvider } from './context/AuthContext'
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
@@ -22,7 +24,11 @@ if (!rootElement.innerHTML) {
     const root = ReactDOM.createRoot(rootElement)
     root.render(
         <StrictMode>
-            <RouterProvider router={router} />
+            <AuthProvider>
+                <CartProvider>
+                    <RouterProvider router={router} />
+                </CartProvider>
+            </AuthProvider>
         </StrictMode>,
     )
 }

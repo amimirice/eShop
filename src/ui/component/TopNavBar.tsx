@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useCart } from '../../context/CartContext'
+import { useAuth } from '../../context/AuthContext'
+import ProductSearchPanel from './ProductSearchPanel'
 
-const navigationItems = ['Shop', 'New In', 'Our Story']
+const navigationItems = [
+    { label: 'Shop', to: '/' },
+    { label: 'Our Story', to: '/our-story' },
+]
 
 
 type TopNavBarProps = {
@@ -15,6 +21,15 @@ export default function TopNavBar({
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [isHovered, setIsHovered] = useState(false)
     const [isScrolled, setIsScrolled] = useState(false)
+    const [isSearchOpen, setIsSearchOpen] = useState(false)
+    const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false)
+    const { cartItems } = useCart()
+    const { user, logout } = useAuth()
+    const bagCount = cartItems.reduce(
+        (total, item) => total + item.quantity,
+        0
+    )
+
 
     useEffect(() => {
         const handleScroll = () => {
@@ -27,13 +42,37 @@ export default function TopNavBar({
             passive: true,
         })
 
+
         return () => {
             window.removeEventListener('scroll', handleScroll)
         }
     }, [])
 
+    // Close the mobile menu when switching to desktop view
+    useEffect(() => {
+        const desktopMediaQuery = window.matchMedia('(min-width: 768px)')
+
+        const handleBreakpointChange = (event: MediaQueryListEvent) => {
+            if (event.matches) {
+                setIsMenuOpen(false)
+            }
+        }
+
+        desktopMediaQuery.addEventListener('change', handleBreakpointChange)
+
+        return () => {
+            desktopMediaQuery.removeEventListener('change', handleBreakpointChange)
+        }
+    }, [])
+
     const showBackground =
-        !transparentOnTop || isHovered || isScrolled || isMenuOpen
+        !transparentOnTop ||
+        isHovered ||
+        isScrolled ||
+        isMenuOpen ||
+        isSearchOpen ||
+        isAccountMenuOpen
+
 
     const textColor = showBackground
         ? 'text-[#24231F]'
@@ -57,31 +96,34 @@ export default function TopNavBar({
                 aria-label="Main navigation"
                 className="mx-auto grid h-20 w-full max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-6 md:grid-cols-[1fr_auto_1fr] md:gap-0 lg:px-12"
             >
+
                 {/* Left desktop navigation */}
-                <div className="hidden items-center gap-7 justify-self-start md:flex">
-                    {navigationItems.map((item) => (
-                        <a
-                            key={item}
-                            href="#"
+                <div className="hidden items-center gap-5 justify-self-start md:flex">
+                {navigationItems.map((item) => (
+                        <Link
+                            key={item.label}
+                            to={item.to}
                             className={`relative py-2 text-sm tracking-wide transition-colors after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-[#B97870] after:transition-all after:duration-300 hover:text-[#B97870] hover:after:w-full ${textColor}`}
                         >
-                            {item}
-                        </a>
+                            {item.label}
+                        </Link>
                     ))}
+
                 </div>
 
                 {/* Logo */}
 
-                <a
-                    href="/"
+                <Link
+                    to="/"
                     className={`justify-self-start whitespace-nowrap font-serif text-xl tracking-[0.03em] transition-colors duration-300 sm:text-2xl md:justify-self-center md:text-3xl md:tracking-[0.08em] ${logoColor}`}
                 >
                     Bloom Atelier
-                </a>
+                </Link>
+
 
                 {/* Right desktop actions & mobile controls */}
 
-                <div className="flex items-center justify-self-end gap-2 sm:gap-4">
+                <div className="flex items-center justify-self-end gap-4 sm:gap-5">
 
                     {/* Desktop actions */}
                     <div className="hidden items-center gap-5 md:flex">
@@ -90,7 +132,9 @@ export default function TopNavBar({
                         <button
                             type="button"
                             aria-label="Search products"
+                            aria-expanded={isSearchOpen}
                             title="Search"
+                            onClick={() => setIsSearchOpen((prev) => !prev)}
                             className={`transition-colors hover:text-[#B97870] ${textColor}`}
                         >
                             <svg
@@ -134,23 +178,78 @@ export default function TopNavBar({
                             </svg>
                         </Link>
 
+
                         {/* Account */}
-                        <button
-                            type="button"
-                            className={`text-sm tracking-wide transition-colors hover:text-[#B97870] ${textColor}`}
-                        >
-                            Account
-                        </button>
+                        <div className="relative">
+                            {user ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        aria-label="Account menu"
+                                        aria-expanded={isAccountMenuOpen}
+                                        onClick={() => {
+                                            setIsSearchOpen(false)
+                                            setIsAccountMenuOpen((prev) => !prev)
+                                        }}
+                                        className={`text-sm tracking-wide transition-colors hover:text-[#B97870] ${textColor}`}
+                                    >
+                                        Account
+                                    </button>
+
+                                    {isAccountMenuOpen && (
+                                        <div className="absolute right-0 top-full z-50 mt-5 w-64 border border-[#D8D2C7] bg-[#F6F1E8] p-5 shadow-lg">
+                                            <p className="text-xs uppercase tracking-[0.12em] text-[#B97870]">
+                                                Signed in as
+                                            </p>
+
+                                            <p className="mt-2 break-all text-sm text-[#4D5943]">
+                                                {user.email ?? 'Google Account'}
+                                            </p>
+
+                                            <div className="mt-5 border-t border-[#D8D2C7] pt-4">
+                                                <button
+                                                    type="button"
+
+
+                                                    onClick={async () => {
+                                                        try {
+                                                            await logout()
+                                                            setIsAccountMenuOpen(false)
+                                                        } catch (error) {
+                                                            console.error('Failed to sign out:', error)
+                                                        }
+                                                    }}
+
+                                                    className="text-sm text-[#4D5943] transition-colors hover:text-[#B97870]"
+                                                >
+                                                    Sign Out
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    aria-label="Sign In"
+                                    className={`text-sm tracking-wide transition-colors hover:text-[#B97870] ${textColor}`}
+                                >
+                                    Account
+                                </Link>
+                            )}
+                        </div>
+
 
                     </div>
 
                     {/* Bag - Desktop & Mobile */}
-                    <button
-                        type="button"
+                    <Link
+                        to="/bag"
                         className={`whitespace-nowrap text-sm tracking-wide transition-colors hover:text-[#B97870] ${textColor}`}
                     >
-                        Bag (0)
-                    </button>
+                        Bag ({bagCount})
+                    </Link>
+
 
                     {/* Mobile menu button */}
                     <button
@@ -196,31 +295,37 @@ export default function TopNavBar({
 
             {/* Mobile menu */}
             <div
-                className={`overflow-hidden border-t transition-[max-height,opacity] duration-300 ease-in-out md:hidden ${
+                className={`overflow-y-auto border-t transition-[max-height,opacity] duration-300 ease-in-out md:hidden ${
                     isMenuOpen
-                        ? 'max-h-80 border-[#4D5943]/15 opacity-100'
+                        ? 'max-h-[80svh] border-[#4D5943]/15 opacity-100'
                         : 'pointer-events-none max-h-0 border-transparent opacity-0'
                 }`}
             >
                 <div className="flex flex-col px-6 pb-6 pt-2">
 
                     {navigationItems.map((item) => (
-                        <a
-                            key={item}
-                            href="#"
+                        <Link
+                            key={item.label}
+                            to={item.to}
                             onClick={() => setIsMenuOpen(false)}
                             className="border-b border-[#4D5943]/15 py-4 text-base text-[#24231F] transition-colors hover:text-[#B97870]"
                         >
-                            {item}
-                        </a>
+                            {item.label}
+                        </Link>
                     ))}
+
 
                     <button
                         type="button"
+                        onClick={() => {
+                            setIsMenuOpen(false)
+                            setIsSearchOpen(true)
+                        }}
                         className="pt-5 text-left text-base text-[#24231F] transition-colors hover:text-[#B97870]"
                     >
                         Search
                     </button>
+
 
                     <Link
                         to="/contact"
@@ -230,15 +335,54 @@ export default function TopNavBar({
                         Contact Us
                     </Link>
 
-                    <button
-                        type="button"
-                        className="pt-4 text-left text-base text-[#24231F] transition-colors hover:text-[#B97870]"
-                    >
-                        Account
-                    </button>
+
+                    {user ? (
+                        <div className="pt-4">
+                            <p className="text-base text-[#24231F]">
+                                Account
+                            </p>
+
+                            <p className="mt-2 break-all text-xs text-[#6D695F]">
+                                {user.email ?? 'Google Account'}
+                            </p>
+
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    try {
+                                        await logout()
+                                        setIsMenuOpen(false)
+                                    } catch (error) {
+                                        console.error('Failed to sign out:', error)
+                                    }
+                                }}
+                                className="mt-4 text-left text-base text-[#4D5943] transition-colors hover:text-[#B97870]"
+                            >
+                                Sign Out
+                            </button>
+                        </div>
+                    ) : (
+                        <Link
+                            to="/login"
+                            onClick={() => setIsMenuOpen(false)}
+                            aria-label="Sign In"
+                            className="pt-4 text-left text-base text-[#24231F] transition-colors hover:text-[#B97870]"
+                        >
+                            Account
+                        </Link>
+                    )}
+
+
 
                 </div>
             </div>
+
+            {/* Product Search Panel */}
+            {isSearchOpen && (
+                <ProductSearchPanel
+                    onClose={() => setIsSearchOpen(false)}
+                />
+            )}
         </header>
     )
 }

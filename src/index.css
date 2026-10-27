@@ -31,3 +31,17 @@ body {
     scroll-behavior: smooth;
   }
 }
+
+
+/* Bloom Atelier — Checkout Autofill Styling */
+
+#checkout-form input:-webkit-autofill,
+#checkout-form input:-webkit-autofill:hover,
+#checkout-form input:-webkit-autofill:focus,
+#checkout-form textarea:-webkit-autofill,
+#checkout-form textarea:-webkit-autofill:hover,
+#checkout-form textarea:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #F6F1E8 inset !important;
+  -webkit-text-fill-color: #24231F !important;
+  caret-color: #24231F;
+}

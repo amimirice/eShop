@@ -38,7 +38,7 @@ export default function HeroBanner() {
     return (
         <section
             aria-label="Bloom Atelier featured collection"
-            className="relative h-[85svh] min-h-[520px] overflow-hidden bg-[#4D5943] md:h-[100svh]"
+            className="relative h-[95svh] min-h-[520px] overflow-hidden bg-[#4D5943] md:h-[100svh]"
         >
             {/* Banner images */}
             {bannerImages.map((banner, index) => (
