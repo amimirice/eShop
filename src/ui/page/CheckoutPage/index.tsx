@@ -531,6 +531,10 @@ export default function CheckoutPage() {
                                             </svg>
                                         </div>
 
+                                        <p className="mt-2 text-xs leading-5 text-[#6D695F] sm:hidden">
+                                            Delivery is available from tomorrow onwards.
+                                        </p>
+
                                         {formErrors.deliveryDate && (
                                             <p
                                                 id="deliveryDate-error"
@@ -631,6 +635,10 @@ export default function CheckoutPage() {
 
                             <p className="mt-4 text-xs text-[#6D695F]">
                                 Delivery details will be confirmed before placing your order.
+                            </p>
+
+                            <p className="mt-3 text-xs font-semibold leading-5 text-[#4D5943]">
+                                Same-day delivery is unavailable. The earliest available delivery date is tomorrow.
                             </p>
                         </div>
 

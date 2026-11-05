@@ -161,6 +161,9 @@ export default function ShoppingBagPage() {
                                     Delivery details will be confirmed at checkout.
                                 </p>
 
+                                <p className="mt-3 text-xs font-semibold leading-5 text-[#4D5943]">
+                                    Same-day delivery is unavailable. The earliest available delivery date is tomorrow.
+                                </p>
 
                                 <div className="mt-6 border-t border-[#D8D2C7] pt-6">
                                     <div className="flex items-center justify-between text-sm font-medium text-[#24231F]">

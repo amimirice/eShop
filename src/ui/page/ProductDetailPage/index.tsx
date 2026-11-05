@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import axios from 'axios'
 
@@ -73,6 +73,16 @@ function ProductDetailContent({ pid }: { pid: string }) {
     })
 
     const { product, loadStatus } = productState
+
+    // Start each product detail view at the top.
+    // Also reset after async product data finishes loading.
+    useLayoutEffect(() => {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'instant',
+        })
+    }, [pid, loadStatus])
 
     // Fetch product details from Spring Boot in production
     useEffect(() => {
