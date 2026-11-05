@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import axios from 'axios'
@@ -37,6 +36,20 @@ function ProductDetailContent({ pid }: { pid: string }) {
     const { addToCart } = useCart()
 
     const [quantity, setQuantity] = useState(1)
+
+    // Add to Bag success feedback
+    const [isAddedToBag, setIsAddedToBag] = useState(false)
+
+    // Reset success feedback after 1.5 seconds
+    useEffect(() => {
+        if (!isAddedToBag) return
+
+        const timer = window.setTimeout(() => {
+            setIsAddedToBag(false)
+        }, 1500)
+
+        return () => window.clearTimeout(timer)
+    }, [isAddedToBag])
 
     // Initialize product state without calling setState in useEffect
     const [productState, setProductState] = useState<ProductState>(() => {
@@ -125,6 +138,9 @@ function ProductDetailContent({ pid }: { pid: string }) {
             imageUrl: product.imageUrl,
             quantity: quantity,
         })
+
+        // Show success feedback after adding to Bag
+        setIsAddedToBag(true)
     }
 
     // Loading state
@@ -189,7 +205,11 @@ function ProductDetailContent({ pid }: { pid: string }) {
                         <img
                             src={product.imageUrl}
                             alt={`${product.name} bouquet`}
-                            className="w-[85%] object-contain md:w-[90%]"
+                            className={
+                                product.pid === 7 || product.pid === 14
+                                    ? 'w-[85%] object-contain md:w-[80%]'
+                                    : 'w-[95%] object-contain md:w-[90%]'
+                            }
                         />
                     </div>
 
@@ -237,6 +257,7 @@ function ProductDetailContent({ pid }: { pid: string }) {
                                 onQuantityChange={setQuantity}
                             />
 
+                            {/* Add to Bag with success feedback */}
                             <button
                                 type="button"
                                 onClick={handleAddToBag}
@@ -244,14 +265,21 @@ function ProductDetailContent({ pid }: { pid: string }) {
                                     product.stock === null ||
                                     product.stock <= 0
                                 }
-                                className="mt-6 w-full max-w-lg border border-[#4D5943] bg-[#4D5943] px-6 py-4 text-sm font-medium tracking-[0.12em] text-white transition-colors duration-300 enabled:hover:bg-[#F6F1E8] enabled:hover:text-[#4D5943] disabled:cursor-not-allowed disabled:opacity-40"
+                                aria-live="polite"
+                                className={`mt-6 w-full max-w-lg border px-6 py-4 text-sm font-medium tracking-[0.12em] text-white transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-40 ${
+                                    isAddedToBag
+                                        ? 'border-[#788574] bg-[#788574] enabled:hover:bg-[#788574]'
+                                        : 'border-[#4D5943] bg-[#4D5943] enabled:hover:bg-[#F6F1E8] enabled:hover:text-[#4D5943]'
+                                }`}
                             >
-                                ADD TO BAG
+                                {isAddedToBag
+                                    ? 'ADDED TO BAG ✓'
+                                    : 'ADD TO BAG'}
                             </button>
 
                             <Link
-                                to="/"
-                                hash="products"
+                                to="/shop"
+                                reloadDocument
                                 className="mt-6 block w-fit text-sm text-[#4D5943] transition-colors duration-300 hover:text-[#B97870]"
                             >
                                 ← Continue Shopping

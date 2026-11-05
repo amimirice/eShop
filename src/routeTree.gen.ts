@@ -16,6 +16,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OrderConfirmationRouteImport } from './routes/order-confirmation'
 import { Route as OurStoryRouteImport } from './routes/our-story'
+import { Route as ShopRouteImport } from './routes/shop'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ProductPidRouteImport } from './routes/product.$pid'
 
@@ -54,6 +55,11 @@ const OurStoryRoute = OurStoryRouteImport.update({
   path: '/our-story',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopRoute = ShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/order-confirmation': typeof OrderConfirmationRoute
   '/our-story': typeof OurStoryRoute
+  '/shop': typeof ShopRoute
   '/terms': typeof TermsRoute
   '/product/$pid': typeof ProductPidRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/order-confirmation': typeof OrderConfirmationRoute
   '/our-story': typeof OurStoryRoute
+  '/shop': typeof ShopRoute
   '/terms': typeof TermsRoute
   '/product/$pid': typeof ProductPidRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/order-confirmation': typeof OrderConfirmationRoute
   '/our-story': typeof OurStoryRoute
+  '/shop': typeof ShopRoute
   '/terms': typeof TermsRoute
   '/product/$pid': typeof ProductPidRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/order-confirmation'
     | '/our-story'
+    | '/shop'
     | '/terms'
     | '/product/$pid'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/order-confirmation'
     | '/our-story'
+    | '/shop'
     | '/terms'
     | '/product/$pid'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/order-confirmation'
     | '/our-story'
+    | '/shop'
     | '/terms'
     | '/product/$pid'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   OrderConfirmationRoute: typeof OrderConfirmationRoute
   OurStoryRoute: typeof OurStoryRoute
+  ShopRoute: typeof ShopRoute
   TermsRoute: typeof TermsRoute
   ProductPidRoute: typeof ProductPidRoute
 }
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OurStoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shop': {
+      id: '/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof ShopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   OrderConfirmationRoute: OrderConfirmationRoute,
   OurStoryRoute: OurStoryRoute,
+  ShopRoute: ShopRoute,
   TermsRoute: TermsRoute,
   ProductPidRoute: ProductPidRoute,
 }

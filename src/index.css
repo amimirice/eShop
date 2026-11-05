@@ -45,3 +45,11 @@ body {
   -webkit-text-fill-color: #24231F !important;
   caret-color: #24231F;
 }
+
+/* Bloom Atelier — Hide native search clear button */
+
+.bloom-search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}

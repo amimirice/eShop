@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -5,6 +6,10 @@ import TopNavBar from '../../component/TopNavBar'
 import Footer from '../../component/Footer'
 import { useCart } from '../../../context/CartContext'
 import { useAuth } from '../../../context/AuthContext'
+import {
+    prepareCheckoutOrder,
+    type CheckoutDetails,
+} from '../../../lib/checkoutApi'
 
 import {
     validateCheckoutForm,
@@ -16,8 +21,19 @@ export default function CheckoutPage() {
     const { user, loading } = useAuth()
     const navigate = useNavigate()
 
-    // Store validation errors for individual fields
-    const [formErrors, setFormErrors] = useState<CheckoutFormErrors>({})
+    // Checkout form validation
+    const [formErrors, setFormErrors] =
+        useState<CheckoutFormErrors>({})
+
+    // Backend checkout state
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [submitError, setSubmitError] = useState('')
+    const [orderPrepared, setOrderPrepared] = useState(false)
+
+    // Keep Demo Checkout during local development
+    const backendCheckoutEnabled =
+        import.meta.env.PROD ||
+        import.meta.env.VITE_ENABLE_BACKEND_CHECKOUT === 'true'
 
     // Earliest delivery date is tomorrow
     const [minDeliveryDate] = useState(() => {
@@ -44,7 +60,7 @@ export default function CheckoutPage() {
         }
     }, [loading, user, navigate])
 
-    // Wait for Firebase to check authentication
+    // Wait for Firebase authentication
     if (loading) {
         return (
             <main className="min-h-screen bg-[#F6F1E8] pt-24">
@@ -55,12 +71,12 @@ export default function CheckoutPage() {
         )
     }
 
-    // Prevent checkout content from appearing before redirect
+    // Prevent checkout content appearing before redirect
     if (!user) {
         return null
     }
 
-    // Show an empty bag page when there are no cart items
+    // Empty Bag Protection
     if (cartItems.length === 0) {
         return (
             <>
@@ -138,13 +154,18 @@ export default function CheckoutPage() {
                             <form
                                 id="checkout-form"
                                 noValidate
-                                onSubmit={(e) => {
+                                onSubmit={async (e) => {
                                     e.preventDefault()
 
-                                    // Read all checkout fields
-                                    const formData = new FormData(e.currentTarget)
+                                    if (isSubmitting || orderPrepared) {
+                                        return
+                                    }
 
-                                    const values = {
+                                    // Read checkout form fields
+                                    const formData =
+                                        new FormData(e.currentTarget)
+
+                                    const values: CheckoutDetails = {
                                         fullName: String(
                                             formData.get('fullName') ?? ''
                                         ),
@@ -170,13 +191,54 @@ export default function CheckoutPage() {
 
                                     setFormErrors(errors)
 
-                                    // Stop submission if any field is invalid
                                     if (Object.keys(errors).length > 0) {
                                         return
                                     }
 
-                                    // Demo checkout only.
-                                    // No real order is created yet.
+                                    // Backend Checkout
+                                    if (backendCheckoutEnabled) {
+                                        setIsSubmitting(true)
+                                        setSubmitError('')
+
+                                        try {
+                                            // Sync Bag and create a PREPARE transaction
+                                            await prepareCheckoutOrder(
+                                                cartItems,
+                                                values
+                                            )
+
+                                            // Prevent duplicate submissions
+                                            setOrderPrepared(true)
+
+                                            // Navigate only after the backend request succeeds
+                                            void navigate({
+                                                to: '/order-confirmation',
+                                                state: (prev) => ({
+                                                    ...prev,
+                                                    checkoutCompleted: true,
+                                                }),
+                                            })
+
+                                        } catch (error) {
+                                            console.error(
+                                                'Checkout API error:',
+                                                error
+                                            )
+
+                                            setSubmitError(
+                                                'Unable to confirm the order request. ' +
+                                                'Please check its status before trying again. ' +
+                                                'No payment has been processed.'
+                                            )
+
+                                        } finally {
+                                            setIsSubmitting(false)
+                                        }
+
+                                        return
+                                    }
+
+                                    // Original Development Demo Checkout
                                     navigate({
                                         to: '/order-confirmation',
                                         state: (prev) => ({
@@ -215,7 +277,9 @@ export default function CheckoutPage() {
                                                     }))
                                                 }
                                             }}
-                                            aria-invalid={Boolean(formErrors.fullName)}
+                                            aria-invalid={Boolean(
+                                                formErrors.fullName
+                                            )}
                                             aria-describedby={
                                                 formErrors.fullName
                                                     ? 'fullName-error'
@@ -260,7 +324,9 @@ export default function CheckoutPage() {
                                                     e.target.value.trim()
 
                                                 const isValidEmail =
-                                                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                                                    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                                                        email
+                                                    )
 
                                                 if (
                                                     isValidEmail &&
@@ -272,7 +338,9 @@ export default function CheckoutPage() {
                                                     }))
                                                 }
                                             }}
-                                            aria-invalid={Boolean(formErrors.email)}
+                                            aria-invalid={Boolean(
+                                                formErrors.email
+                                            )}
                                             aria-describedby={
                                                 formErrors.email
                                                     ? 'email-error'
@@ -323,7 +391,9 @@ export default function CheckoutPage() {
                                                     }))
                                                 }
                                             }}
-                                            aria-invalid={Boolean(formErrors.phone)}
+                                            aria-invalid={Boolean(
+                                                formErrors.phone
+                                            )}
                                             aria-describedby={
                                                 formErrors.phone
                                                     ? 'phone-error'
@@ -374,7 +444,9 @@ export default function CheckoutPage() {
                                                     }))
                                                 }
                                             }}
-                                            aria-invalid={Boolean(formErrors.address)}
+                                            aria-invalid={Boolean(
+                                                formErrors.address
+                                            )}
                                             aria-describedby={
                                                 formErrors.address
                                                     ? 'address-error'
@@ -399,7 +471,7 @@ export default function CheckoutPage() {
                                     </div>
 
                                     {/* Preferred Delivery Date */}
-                                    <div>
+                                    <div className="min-w-0">
                                         <label
                                             htmlFor="deliveryDate"
                                             className="mb-2 block text-sm text-[#4D5943]"
@@ -407,38 +479,57 @@ export default function CheckoutPage() {
                                             Preferred Delivery Date *
                                         </label>
 
-                                        <input
-                                            id="deliveryDate"
-                                            name="deliveryDate"
-                                            type="date"
-                                            min={minDeliveryDate}
-                                            required
-                                            onChange={(e) => {
-                                                const date = e.target.value
+                                        <div className={`relative min-w-0 overflow-hidden border px-4 py-3 focus-within:border-[#4D5943] sm:overflow-visible sm:border-0 sm:p-0 ${
+                                                formErrors.deliveryDate
+                                                    ? 'border-[#B97870] focus-within:border-[#B97870]'
+                                                    : 'border-[#D8D2C7]'
+                                            }`}>
+                                            <input
+                                                id="deliveryDate"
+                                                name="deliveryDate"
+                                                type="date"
+                                                min={minDeliveryDate}
+                                                required
+                                                onChange={(e) => {
+                                                    const date = e.target.value
 
-                                                if (
-                                                    date &&
-                                                    date >= minDeliveryDate &&
+                                                    if (
+                                                        date &&
+                                                        date >= minDeliveryDate &&
+                                                        formErrors.deliveryDate
+                                                    ) {
+                                                        setFormErrors((prev) => ({
+                                                            ...prev,
+                                                            deliveryDate: undefined,
+                                                        }))
+                                                    }
+                                                }}
+                                                aria-invalid={Boolean(
                                                     formErrors.deliveryDate
-                                                ) {
-                                                    setFormErrors((prev) => ({
-                                                        ...prev,
-                                                        deliveryDate: undefined,
-                                                    }))
+                                                )}
+                                                aria-describedby={
+                                                    formErrors.deliveryDate
+                                                        ? 'deliveryDate-error'
+                                                        : undefined
                                                 }
-                                            }}
-                                            aria-invalid={Boolean(formErrors.deliveryDate)}
-                                            aria-describedby={
-                                                formErrors.deliveryDate
-                                                    ? 'deliveryDate-error'
-                                                    : undefined
-                                            }
-                                            className={`w-full border bg-transparent px-4 py-3 text-sm text-[#4D5943] outline-none [color-scheme:light] ${
-                                                formErrors.deliveryDate
-                                                    ? 'border-[#B97870] focus:border-[#B97870]'
-                                                    : 'border-[#D8D2C7] focus:border-[#4D5943]'
-                                            }`}
-                                        />
+                                                className={`block box-border w-full min-w-0 max-w-full border-0 bg-transparent p-0 text-base text-[#4D5943] outline-none [color-scheme:light] sm:border sm:px-4 sm:py-3 sm:text-sm ${
+                                                    formErrors.deliveryDate
+                                                        ? 'border-[#B97870] focus:border-[#B97870]'
+                                                        : 'border-[#D8D2C7] focus:border-[#4D5943]'
+                                                }`}
+                                            />
+                                            <svg
+                                                aria-hidden="true"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.5"
+                                                className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#4D5943] sm:hidden"
+                                            >
+                                                <rect x="3" y="5" width="18" height="16" rx="1" />
+                                                <path d="M7 3v4M17 3v4M3 10h18" />
+                                            </svg>
+                                        </div>
 
                                         {formErrors.deliveryDate && (
                                             <p
@@ -456,11 +547,38 @@ export default function CheckoutPage() {
                                 {/* Place Order Button */}
                                 <button
                                     type="submit"
-                                    disabled={cartItems.length === 0}
+                                    disabled={
+                                        cartItems.length === 0 ||
+                                        isSubmitting ||
+                                        orderPrepared
+                                    }
                                     className="mt-8 w-full border border-[#4D5943] bg-[#4D5943] px-6 py-4 text-sm uppercase tracking-[0.16em] text-[#F6F1E8] transition-colors duration-300 enabled:hover:bg-[#F6F1E8] enabled:hover:text-[#4D5943] disabled:cursor-not-allowed disabled:opacity-40"
                                 >
-                                    Place Order
+                                    {isSubmitting
+                                        ? 'Preparing Order...'
+                                        : orderPrepared
+                                            ? 'Order Request Prepared'
+                                            : 'Place Order'}
                                 </button>
+
+                                {submitError && (
+                                    <p
+                                        role="alert"
+                                        className="mt-4 text-xs leading-6 text-[#B97870]"
+                                    >
+                                        {submitError}
+                                    </p>
+                                )}
+
+                                {orderPrepared && (
+                                    <p
+                                        role="status"
+                                        className="mt-4 text-xs leading-6 text-[#4D5943]"
+                                    >
+                                        Your order request has been prepared.
+                                        No payment has been processed.
+                                    </p>
+                                )}
                             </form>
                         </div>
 
@@ -524,4 +642,3 @@ export default function CheckoutPage() {
         </>
     )
 }
-

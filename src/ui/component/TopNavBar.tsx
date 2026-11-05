@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import ProductSearchPanel from './ProductSearchPanel'
 
 const navigationItems = [
-    { label: 'Shop', to: '/' },
+    { label: 'Shop', to: '/shop' },
     { label: 'Our Story', to: '/our-story' },
 ]
 
@@ -100,13 +100,14 @@ export default function TopNavBar({
                 {/* Left desktop navigation */}
                 <div className="hidden items-center gap-5 justify-self-start md:flex">
                 {navigationItems.map((item) => (
-                        <Link
-                            key={item.label}
-                            to={item.to}
-                            className={`relative py-2 text-sm tracking-wide transition-colors after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-[#B97870] after:transition-all after:duration-300 hover:text-[#B97870] hover:after:w-full ${textColor}`}
-                        >
-                            {item.label}
-                        </Link>
+                    <Link
+                        key={item.label}
+                        to={item.to}
+                        reloadDocument={item.label === 'Shop'}
+                        className={`relative py-2 text-sm tracking-wide transition-colors after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-[#B97870] after:transition-all after:duration-300 hover:text-[#B97870] hover:after:w-full ${textColor}`}
+                    >
+                        {item.label}
+                    </Link>
                     ))}
 
                 </div>
@@ -307,6 +308,7 @@ export default function TopNavBar({
                         <Link
                             key={item.label}
                             to={item.to}
+                            reloadDocument={item.label === 'Shop'}
                             onClick={() => setIsMenuOpen(false)}
                             className="border-b border-[#4D5943]/15 py-4 text-base text-[#24231F] transition-colors hover:text-[#B97870]"
                         >

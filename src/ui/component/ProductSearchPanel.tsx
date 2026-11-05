@@ -112,8 +112,19 @@ export default function ProductSearchPanel({
                         placeholder="Search bouquets, flowers or colours..."
                         aria-label="Search bouquets"
                         autoFocus
-                        className="min-w-0 flex-1 bg-transparent text-sm text-[#24231F] outline-none placeholder:text-[#8A887F]"
+                        className="bloom-search-input min-w-0 flex-1 bg-transparent text-base sm:text-sm text-[#24231F] outline-none placeholder:text-[#8A887F]"
                     />
+
+                    {query.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setQuery('')}
+                            aria-label="Clear search"
+                            className="shrink-0 text-lg leading-none text-[#B97870] transition-opacity hover:opacity-70"
+                        >
+                            ×
+                        </button>
+                    )}
 
                     <button
                         type="button"

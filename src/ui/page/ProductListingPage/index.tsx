@@ -8,14 +8,29 @@ export default function ProductListingPage() {
     useEffect(() => {
         if (window.location.hash !== '#products') return
 
-        const frameId = requestAnimationFrame(() => {
+        const scrollToProducts = () => {
             document.getElementById('products')?.scrollIntoView({
                 behavior: 'instant',
                 block: 'start',
             })
-        })
+        }
 
-        return () => cancelAnimationFrame(frameId)
+        // Position the collection after React renders
+        const frameId = requestAnimationFrame(scrollToProducts)
+
+        // Correct the position after browser navigation settles
+        const timerId = window.setTimeout(scrollToProducts, 400)
+
+        // Handle full page loads and browser history restoration
+        window.addEventListener('load', scrollToProducts)
+        window.addEventListener('pageshow', scrollToProducts)
+
+        return () => {
+            cancelAnimationFrame(frameId)
+            window.clearTimeout(timerId)
+            window.removeEventListener('load', scrollToProducts)
+            window.removeEventListener('pageshow', scrollToProducts)
+        }
     }, [])
 
     return (

@@ -1,28 +1,29 @@
+
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import { api } from '../../../../lib/api'
 import ProductCard from './ProductCard'
 import type { ProductListItem } from '../../../../data/product.type'
 import { productFlowers } from '../../../../data/productFlowers'
 import { mockProductList } from '../../../../data/mockProducts'
 
-
 export default function ProductCardContainer() {
-    const [products, setProducts] = useState<ProductListItem[]>([])
-    const [isLoading, setIsLoading] = useState(true)
+    // Use mock products during local development
+    const [products, setProducts] = useState<ProductListItem[]>(() =>
+        import.meta.env.DEV ? mockProductList : []
+    )
+
+    const [isLoading, setIsLoading] = useState(!import.meta.env.DEV)
     const [error, setError] = useState(false)
 
-
     useEffect(() => {
-        // Use mock products while developing without AWS
+        // Mock products are already initialized in development mode
         if (import.meta.env.DEV) {
-            setProducts(mockProductList)
-            setIsLoading(false)
             return
         }
 
-        // Keep the original backend API integration
-        axios
-            .get<ProductListItem[]>('http://localhost:8080/public/products')
+        // Fetch products from the configured backend API
+        api
+            .get<ProductListItem[]>('/public/products')
             .then((response) => {
                 setProducts(response.data)
             })
@@ -35,7 +36,6 @@ export default function ProductCardContainer() {
             })
     }, [])
 
-
     return (
         <div className="w-full">
             <header className="mb-12">
@@ -46,9 +46,7 @@ export default function ProductCardContainer() {
                 <h1 className="mt-3 font-serif text-2xl tracking-tight text-[#4D5943]">
                     Bouquets for your forever
                 </h1>
-
             </header>
-
 
             {isLoading ? (
                 <p className="text-sm text-[#6D695F]">
@@ -77,6 +75,7 @@ export default function ProductCardContainer() {
         </div>
     )
 }
+
 
 
 {/*
