@@ -56,7 +56,7 @@ export default function ContactUsPage() {
                             </a>
 
                             <div className="mt-8 space-y-3 text-sm text-[#6D695F]">
-                                <p>T: +852 6200 2311</p>
+                                <p>T: +852 6234 5678</p>
                                 <p>E: amyrice@bloomatelier.com</p>
                             </div>
                         </div>
